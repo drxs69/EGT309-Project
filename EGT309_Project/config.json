@@ -1,0 +1,68 @@
+{
+  "database": {
+    "path": "data/gas_monitoring.db",
+    "table_name": "gas_monitoring"
+  },
+  "columns": {
+    "target": "Activity Level",
+    "drop_columns": [
+      "Session ID"
+    ]
+  },
+  "outputs": {
+    "results_dir": "results",
+    "visuals_dir": "visuals",
+    "saved_model_dir": "saved_model",
+    "model_results": "results/model_results.csv",
+    "feature_importance": "results/feature_importance.csv",
+    "best_model": "saved_model/best_model.pkl",
+    "preprocessor": "saved_model/preprocessor.pkl"
+  },
+  "training": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "scoring": "f1_macro",
+    "cv_folds": 2
+  },
+  "eda": {
+    "iqr_multiplier": 1.5,
+    "top_n_categories": 10
+  },
+  "models": {
+    "logistic_regression": {
+      "enabled": true,
+      "params": {
+        "classifier__C": [
+          0.1,
+          1.0
+        ]
+      }
+    },
+    "decision_tree": {
+      "enabled": true,
+      "params": {
+        "classifier__max_depth": [
+          3,
+          5,
+          null
+        ],
+        "classifier__min_samples_split": [
+          2,
+          10
+        ]
+      }
+    },
+    "random_forest": {
+      "enabled": true,
+      "params": {
+        "classifier__n_estimators": [
+          50
+        ],
+        "classifier__max_depth": [
+          null,
+          10
+        ]
+      }
+    }
+  }
+}

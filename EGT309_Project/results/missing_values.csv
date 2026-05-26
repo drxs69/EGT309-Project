@@ -1,0 +1,15 @@
+column,missing_count,missing_percentage
+Humidity,1928,19.28
+MetalOxideSensor_Unit2,1410,14.1
+Ambient Light Level,1054,10.54
+CO_GasSensor,834,8.34
+Time of Day,0,0.0
+Temperature,0,0.0
+CO2_InfraredSensor,0,0.0
+CO2_ElectroChemicalSensor,0,0.0
+MetalOxideSensor_Unit1,0,0.0
+MetalOxideSensor_Unit3,0,0.0
+MetalOxideSensor_Unit4,0,0.0
+Session ID,0,0.0
+HVAC Operation Mode,0,0.0
+Activity Level,0,0.0

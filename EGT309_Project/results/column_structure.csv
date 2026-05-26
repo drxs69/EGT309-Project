@@ -1,0 +1,15 @@
+column,data_type,non_null_count,missing_count
+Time of Day,object,10000,0
+Temperature,float64,10000,0
+Humidity,float64,8072,1928
+CO2_InfraredSensor,float64,10000,0
+CO2_ElectroChemicalSensor,float64,10000,0
+MetalOxideSensor_Unit1,float64,10000,0
+MetalOxideSensor_Unit2,float64,8590,1410
+MetalOxideSensor_Unit3,float64,10000,0
+MetalOxideSensor_Unit4,float64,10000,0
+CO_GasSensor,float64,9166,834
+Session ID,int64,10000,0
+HVAC Operation Mode,object,10000,0
+Ambient Light Level,object,8946,1054
+Activity Level,object,10000,0

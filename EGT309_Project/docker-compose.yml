@@ -1,0 +1,9 @@
+services:
+  elderguard-pipeline:
+    build: .
+    container_name: elderguard_pipeline
+    volumes:
+      - ./results:/app/results
+      - ./visuals:/app/visuals
+      - ./saved_model:/app/saved_model
+    command: python src/main.py --config config.json

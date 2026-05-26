@@ -1,0 +1,11 @@
+HVAC Operation Mode,count
+cooling_active,1502
+maintenance_mode,1500
+heating_active,1468
+off,1456
+eco_mode,1452
+ventilation_only,1394
+COOLING_ACTIVE,112
+ECO_MODE,112
+MAINTENANCE_MODE,106
+Off,103

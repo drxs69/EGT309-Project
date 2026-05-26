@@ -1,0 +1,4 @@
+Activity Level,Temperature,Humidity,CO2_InfraredSensor,CO2_ElectroChemicalSensor,MetalOxideSensor_Unit1,MetalOxideSensor_Unit2,MetalOxideSensor_Unit3,MetalOxideSensor_Unit4,CO_GasSensor,Session ID
+High Activity,39.03,51.76,108.78,584.29,473.35,735.14,688.01,621.0,1.15,5434.52
+Low Activity,42.73,52.09,114.8,572.04,458.44,718.15,668.53,598.0,1.5,5518.35
+Moderate Activity,42.47,50.78,101.16,588.78,493.04,744.76,699.84,635.37,0.95,5259.44
