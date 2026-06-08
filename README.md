@@ -166,7 +166,7 @@ python src/pipeline.py
 | Feature | Formula | Justification |
 |---|---|---|
 | `CO2_mean` | mean(CO2_IR, CO2_EC) | Reduces noise from two highly correlated sensors |
-| `CO2_diff` | |CO2_IR − CO2_EC| | Sensor disagreement signal; may reflect air stratification during movement |
+| `CO2_diff` | CO2_IR − CO2_EC | Sensor disagreement signal; may reflect air stratification during movement |
 | `MOS_mean` | mean(MOS units 1–4) | Overall VOC/gas load; rises with cooking and exertion |
 | `MOS_range` | max(MOS) − min(MOS) | Spatial variance; increases when resident moves between rooms |
 | `is_night` | 1 if Time of Day == 'night' | Encodes the strongest categorical signal compactly |
