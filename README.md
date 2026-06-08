@@ -80,16 +80,10 @@ chmod +x run.sh
 docker build -t elderguard-pipeline .
 
 # Run pipeline (mount data directory)
-docker run --rm \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/saved_model:/app/saved_model \
-  elderguard-pipeline
+docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline
 
 # With CLI overrides
-docker run --rm \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/saved_model:/app/saved_model \
-  elderguard-pipeline python src/pipeline.py --rf_n_estimators 300
+docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline python src/pipeline.py --gb_n_estimators 300 --gb_learning_rate 0.05
 ```
 
 ### Docker Development Environment
