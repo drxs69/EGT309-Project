@@ -79,8 +79,11 @@ chmod +x run.sh
 # Build image
 docker build -t elderguard-pipeline .
 
-# Run pipeline (mount data directory)
+# Run pipeline (mount data directory) (WINDOWS VERSION)
 docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline
+
+# Run pipeline (mount data directory) (MAC VERSION)
+docker run --rm -v "${PWD}/data:/app/data" -v "${PWD}/saved_model:/app/saved_model" elderguard-pipeline
 
 # With CLI overrides
 docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline python src/pipeline.py --rf_n_estimators 300
