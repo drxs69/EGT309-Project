@@ -112,11 +112,11 @@ python src/pipeline.py
 | Argument | Default | Description |
 |---|---|---|
 | `--data` | `data/gas_monitoring.db` | Path to the SQLite database |
-| `--test_size` | `0.25` | Fraction of data held out for testing |
-| `--rf_n_estimators` | `300` | Number of trees in Random Forest |
+| `--test_size` | `0.2` | Fraction of data held out for testing |
+| `--rf_n_estimators` | `200` | Number of trees in Random Forest |
 | `--gb_n_estimators` | `150` | Number of boosting rounds |
-| `--gb_learning_rate` | `0.05` | Gradient Boosting learning rate |
-| `--lr_C` | `0.1` | Regularisation strength for Logistic Regression |
+| `--gb_learning_rate` | `0.1` | Gradient Boosting learning rate |
+| `--lr_C` | `1.0` | Regularisation strength for Logistic Regression |
 | `--skip_train` | `False` | If set, load saved models and skip training |
 
 ---
