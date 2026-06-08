@@ -73,7 +73,7 @@ chmod +x run.sh
 ./run.sh
 ```
 
-### Option 2 – Docker
+### Option 2 – Docker (FOR WINDOWS)
 
 ```bash
 # Build image
@@ -86,7 +86,26 @@ docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_mod
 docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline python src/pipeline.py --rf_n_estimators 300
 ```
 
-### Docker Development Environment
+### Option 2 – Docker (FOR MACOS)
+
+```bash
+# Build image
+docker build -t elderguard-pipeline .
+
+# Run pipeline (mount data directory)
+docker run --rm \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/saved_model:/app/saved_model \
+  elderguard-pipeline
+
+# With CLI overrides
+docker run --rm \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/saved_model:/app/saved_model \
+  elderguard-pipeline python src/pipeline.py --rf_n_estimators 300
+```
+
+### Docker Development Environment(WINDOWS)
 
 ```bash
 # Start interactive development container
@@ -98,6 +117,18 @@ docker run -it --rm -v "${PWD}:/app" -w /app elderguard-pipeline sh
 # Inside container: run individual modules or the full pipeline
 python src/pipeline.py
 ```
+
+### Docker Development Environment (MACOS)
+
+```bash
+# Start interactive development container
+docker run -it --rm \
+  -v $(pwd):/app \
+  -w /app \
+  elderguard-pipeline bash
+
+# Inside container: run individual modules or the full pipeline
+python src/pipeline.py
 
 ---
 
