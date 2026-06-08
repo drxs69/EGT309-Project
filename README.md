@@ -80,10 +80,16 @@ chmod +x run.sh
 docker build -t elderguard-pipeline .
 
 # Run pipeline (mount data directory)
-docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline
+docker run --rm \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/saved_model:/app/saved_model \
+  elderguard-pipeline
 
 # With CLI overrides
-docker run --rm -v "${PWD}\data:/app/data" -v "${PWD}\saved_model:/app/saved_model" elderguard-pipeline python src/pipeline.py --gb_n_estimators 300 --gb_learning_rate 0.05
+docker run --rm \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/saved_model:/app/saved_model \
+  elderguard-pipeline python src/pipeline.py --rf_n_estimators 300
 ```
 
 ### Docker Development Environment
@@ -168,15 +174,15 @@ All three are appropriate for multi-class classification without modification.
 
 | Model | Accuracy | Macro F1 |
 |---|---|---|
-| Random Forest | 0.6865 | 0.5395 |
-| Gradient Boosting | 0.6550 | 0.5103 |
-| Logistic Regression | 0.6280 | 0.4095 |
+| Random Forest | 0.6855 | 0.5326 |
+| Gradient Boosting | 0.6460 | 0.4702 |
+| Logistic Regression | 0.6260 | 0.4069 |
 
 Random Forest achieves the best macro F1 on this dataset. Gradient Boosting is competitive. Logistic Regression struggles with the High Activity minority class, confirming the dataset has non-linear structure that benefits from tree-based models.
 
 ### Tuning Notes
 
-Hyperparameters are configurable via `src/config.py` or CLI arguments. The current values (200 estimators, learning rate 0.1, depth 5 for GBM) were selected as sensible defaults based on dataset size (10,000 rows, 27 features). Further tuning via `GridSearchCV` or `RandomizedSearchCV` can be enabled by modifying `model_training.py`.
+Hyperparameters are configurable via `src/config.py` or CLI arguments. The current values (200 trees for Random Forest; 150 estimators, learning rate 0.1, depth 3 for Gradient Boosting) were selected as sensible defaults based on dataset size (10,000 rows, 30 processed features). Further tuning via `GridSearchCV` or `RandomizedSearchCV` can be enabled by modifying `model_training.py`.
 
 ---
 

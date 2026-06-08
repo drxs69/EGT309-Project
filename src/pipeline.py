@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument("--data",              type=str,   default=config.DATA_PATH)
     parser.add_argument("--test_size",         type=float, default=config.TEST_SIZE)
     parser.add_argument("--rf_n_estimators",   type=int,   default=config.RF_PARAMS["n_estimators"])
-    parser.add_argument("--gb_n_estimators",   type=int,   default=config.GB_PARAMS["n_estimators"])
+    parser.add_argument("--gb_n_estimators",   type=int,   default=config.GB_PARAMS["n_estimators"] )
     parser.add_argument("--gb_learning_rate",  type=float, default=config.GB_PARAMS["learning_rate"])
     parser.add_argument("--lr_C",              type=float, default=config.LR_PARAMS["C"])
     parser.add_argument("--skip_train",        action="store_true",

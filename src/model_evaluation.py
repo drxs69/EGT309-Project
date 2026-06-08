@@ -46,7 +46,7 @@ def evaluate_model(model, X_test, y_test, class_names: list) -> dict:
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     mac_f1 = f1_score(y_test, y_pred, average="macro")
-    report = classification_report(y_test, y_pred, target_names=class_names)
+    report = classification_report(y_test, y_pred, target_names=class_names, zero_division=0)
     cm = confusion_matrix(y_test, y_pred)
     return {
         "accuracy":   acc,

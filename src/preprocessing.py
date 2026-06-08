@@ -4,46 +4,23 @@ preprocessing.py
 Handles all data-cleaning, imputation, feature-engineering, and
 encoding steps before the data is fed into any ML model.
 
-Assumptions & justifications
-------------------------------
-1.  **Target label normalisation** – The raw data contains duplicate
-    spellings of the same class ('Low Activity', 'Low_Activity',
-    'LowActivity'; 'Moderate Activity', 'ModerateActivity').
-    These are mapped to three canonical labels before any modelling.
-
-2.  **Temperature outliers** – The max temperature (307 °C) is
-    physically impossible for indoor air; the distribution is heavily
-    right-skewed.  We cap extreme values using an IQR-based fence
-    (Q3 + 1.5 × IQR) rather than dropping rows, preserving sample size.
-
-3.  **Missing numeric values** – Humidity (~19 %), MetalOxideSensor_Unit2
-    (~14 %), and CO_GasSensor (~8 %) have missing entries.  We impute
-    with the column *median* (robust to remaining outliers after capping)
-    computed on the training set only to prevent data leakage.
-
-4.  **Missing categorical values** – Ambient Light Level has ~10 % nulls.
-    We impute with the most-frequent value ('very_bright') computed on
-    the training set.
-
-5.  **HVAC / label case normalisation** – HVAC Operation Mode has mixed
-    casing (e.g. 'COOLING_ACTIVE' vs 'cooling_active').  All values are
-    lower-cased and stripped before encoding.
-
-6.  **Session ID** – Excluded from features; it is an administrative
-    identifier, not a sensor reading.
-
-7.  **Encoding** – Categorical features are one-hot encoded (drop-first
-    to avoid multicollinearity); numeric features are standardised with
-    StandardScaler.
+Main accuracy fixes added:
+1. Split the dataset before fitting imputers so test data does not leak into
+   training preprocessing statistics.
+2. Impute categorical missing values using the training-set mode before
+   one-hot encoding.
+3. Keep all one-hot categories instead of drop_first=True. Tree models do not
+   need drop-first encoding, and keeping all categories preserves signal.
+4. Cap impossible humidity values to the physical 0–100% range.
 """
 
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from config import (
     NUMERIC_FEATURES, CATEGORICAL_FEATURES, TARGET_COLUMN,
-    SESSION_COLUMN, TEST_SIZE, RANDOM_STATE, TEMP_IQR_MULTIPLIER,
+    TEST_SIZE, RANDOM_STATE, TEMP_IQR_MULTIPLIER,
+    HUMIDITY_MIN, HUMIDITY_MAX,
 )
 
 
@@ -89,8 +66,7 @@ def normalise_categoricals(df: pd.DataFrame) -> pd.DataFrame:
 def cap_temperature_outliers(df: pd.DataFrame) -> pd.DataFrame:
     """
     Cap Temperature at Q3 + IQR_MULTIPLIER * IQR.
-    Values well above 100 °C are impossible indoors and treated as
-    sensor faults / synthetic contamination.
+    Values well above normal indoor temperature are treated as sensor faults.
     """
     df = df.copy()
     q1 = df["Temperature"].quantile(0.25)
@@ -103,41 +79,32 @@ def cap_temperature_outliers(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def cap_humidity_outliers(df: pd.DataFrame) -> pd.DataFrame:
+    """Cap Humidity to the physically valid 0–100% range."""
+    df = df.copy()
+    n_capped = ((df["Humidity"] < HUMIDITY_MIN) | (df["Humidity"] > HUMIDITY_MAX)).sum()
+    df["Humidity"] = df["Humidity"].clip(lower=HUMIDITY_MIN, upper=HUMIDITY_MAX)
+    print(f"[Preprocessing] Humidity: capped {n_capped} invalid value(s) outside {HUMIDITY_MIN}–{HUMIDITY_MAX}%.")
+    return df
+
+
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Derive additional features that may capture sensor-fusion signals.
-
-    New features
-    ------------
-    CO2_mean        : Average of the two CO2 sensor readings.
-    CO2_diff        : Absolute difference between the two CO2 sensors
-                      (sensor disagreement – proxy for air stratification
-                      or sensor fault).
-    MOS_mean        : Mean of all four Metal Oxide Sensor units
-                      (captures overall VOC / gas load).
-    MOS_range       : Max – Min of the four MOS units
-                      (captures spatial variation within the home).
-    is_night        : Binary flag for 'night' time-of-day.
-    hvac_active     : Binary flag – 1 if HVAC is doing active work
-                      (heating, cooling, eco, ventilation).
+    Derive additional sensor-fusion features.
     """
     df = df.copy()
 
-    # CO2 sensor fusion
     df["CO2_mean"] = df[["CO2_InfraredSensor", "CO2_ElectroChemicalSensor"]].mean(axis=1)
     df["CO2_diff"] = (
         df["CO2_InfraredSensor"] - df["CO2_ElectroChemicalSensor"]
     ).abs()
 
-    # Metal oxide sensor fusion
     mos_cols = [c for c in NUMERIC_FEATURES if "MetalOxide" in c]
-    df["MOS_mean"]  = df[mos_cols].mean(axis=1)
+    df["MOS_mean"] = df[mos_cols].mean(axis=1)
     df["MOS_range"] = df[mos_cols].max(axis=1) - df[mos_cols].min(axis=1)
 
-    # Time-of-day binary flag
     df["is_night"] = (df["Time of Day"] == "night").astype(int)
 
-    # HVAC active flag
     inactive_modes = {"off", "maintenance_mode"}
     df["hvac_active"] = (~df["HVAC Operation Mode"].isin(inactive_modes)).astype(int)
 
@@ -151,43 +118,47 @@ def split_and_encode(df: pd.DataFrame):
 
     Returns
     -------
-    X_train, X_test, y_train, y_test, feature_names, label_encoder
+    X_train, X_test, y_train, y_test, feature_names, label_encoder, scaler
     """
-    # Define final feature set (original + engineered numerics + categoricals)
     engineered_numeric = ["CO2_mean", "CO2_diff", "MOS_mean", "MOS_range"]
-    binary_features    = ["is_night", "hvac_active"]
+    binary_features = ["is_night", "hvac_active"]
     all_numeric = NUMERIC_FEATURES + engineered_numeric + binary_features
 
-    # One-hot encode (in a reproducible way using pd.get_dummies)
     feature_df = df[all_numeric + CATEGORICAL_FEATURES].copy()
-    feature_df = pd.get_dummies(feature_df, columns=CATEGORICAL_FEATURES, drop_first=True)
 
-    # Encode target
     le = LabelEncoder()
     y = le.fit_transform(df[TARGET_COLUMN])
 
-    # Train / test split (stratified to preserve class balance)
     X_train, X_test, y_train, y_test = train_test_split(
-        feature_df, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
+        feature_df,
+        y,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=y,
     )
 
-    # --- Impute numeric columns using train-set statistics only ---
+    # Impute numeric columns using train-set median only.
     for col in all_numeric:
-        if col in X_train.columns and X_train[col].isnull().any():
-            fill_val = X_train[col].median()
-            X_train[col] = X_train[col].fillna(fill_val)
-            X_test[col]  = X_test[col].fillna(fill_val)
+        fill_val = X_train[col].median()
+        X_train[col] = X_train[col].fillna(fill_val)
+        X_test[col] = X_test[col].fillna(fill_val)
 
-    # One-hot encoded columns are already 0/1; no NaN expected there.
-    # Fill any remaining NaN with 0 as a safety net.
-    X_train = X_train.fillna(0)
-    X_test  = X_test.fillna(0)
+    # Impute categorical columns using train-set mode only.
+    for col in CATEGORICAL_FEATURES:
+        mode_val = X_train[col].mode(dropna=True)[0]
+        X_train[col] = X_train[col].fillna(mode_val)
+        X_test[col] = X_test[col].fillna(mode_val)
 
-    # --- Scale numeric features ---
+    # One-hot encode after split and align test columns to train columns.
+    X_train = pd.get_dummies(X_train, columns=CATEGORICAL_FEATURES, drop_first=False)
+    X_test = pd.get_dummies(X_test, columns=CATEGORICAL_FEATURES, drop_first=False)
+    X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
+
+    # Scale numeric features. Tree models do not require it, but LR benefits.
     scaler = StandardScaler()
     numeric_cols = [c for c in all_numeric if c in X_train.columns]
     X_train[numeric_cols] = scaler.fit_transform(X_train[numeric_cols])
-    X_test[numeric_cols]  = scaler.transform(X_test[numeric_cols])
+    X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
 
     feature_names = list(X_train.columns)
     print(f"[Preprocessing] Train: {X_train.shape}, Test: {X_test.shape}")
@@ -200,5 +171,6 @@ def run_preprocessing(df: pd.DataFrame):
     df = normalise_labels(df)
     df = normalise_categoricals(df)
     df = cap_temperature_outliers(df)
+    df = cap_humidity_outliers(df)
     df = engineer_features(df)
     return split_and_encode(df)

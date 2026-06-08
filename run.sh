@@ -25,11 +25,11 @@ fi
 # Install dependencies if requirements.txt is present
 if [ -f "requirements.txt" ]; then
     echo "Installing dependencies..."
-    python3 -m pip install -r requirements.txt
+    python.exe -m pip install -r requirements.txt -q
 fi
 
 # Run the pipeline
-python3 src/pipeline.py "$@"
+python.exe src/pipeline.py "$@"
 
 echo ""
 echo "Pipeline finished. Check saved_model/ for outputs."

@@ -22,8 +22,10 @@ TABLE_NAME = "gas_monitoring"
 TARGET_COLUMN = "Activity Level"
 SESSION_COLUMN = "Session ID"          # identifier – not a predictive feature
 
-# Temperature IQR multiplier for outlier capping
+# Outlier capping settings
 TEMP_IQR_MULTIPLIER = 1.5
+HUMIDITY_MIN = 0
+HUMIDITY_MAX = 100
 
 # ---------------------------------------------------------------------------
 # Feature lists
@@ -56,34 +58,38 @@ RANDOM_STATE = 42
 # Model hyperparameters
 # ---------------------------------------------------------------------------
 
-# Random Forest
+# Random Forest tuned mainly for accuracy. Removing class_weight="balanced"
+# improves overall accuracy because the dataset is dominated by Low Activity.
 RF_PARAMS = {
-    "n_estimators": 300,
-    "max_depth": 10,
-    "min_samples_split": 5,
-    "min_samples_leaf": 2,
-    "class_weight": "balanced",
+    "n_estimators": 200,
+    "max_depth": None,
+    "min_samples_split": 2,
+    "min_samples_leaf": 1,
+    "max_features": "sqrt",
+    "class_weight": None,
     "random_state": RANDOM_STATE,
     "n_jobs": -1,
 }
 
-# Gradient Boosting
+# Gradient Boosting tuned as a strong boosting baseline while keeping runtime reasonable.
 GB_PARAMS = {
-    "n_estimators": 300,
-    "learning_rate": 0.05,
+    "n_estimators": 150,
+    "learning_rate": 0.1,
     "max_depth": 3,
     "subsample": 0.8,
     "random_state": RANDOM_STATE,
 }
 
-# Logistic Regression
+# Logistic Regression baseline. No class balancing because the user requested
+# higher accuracy; balanced LR improves minority recall but lowers accuracy.
 LR_PARAMS = {
     "max_iter": 2000,
     "random_state": RANDOM_STATE,
-    "C": 0.5,
+    "C": 0.1,
     "solver": "lbfgs",
-    "class_weight": "balanced",
+    "class_weight": None,
 }
 
-# Cross-validation folds
-CV_FOLDS = 5
+# Set to 3 or 5 to enable cross-validation. Default 0 keeps the pipeline fast
+# for assignment demonstrations and uses the held-out test set for evaluation.
+CV_FOLDS = 0

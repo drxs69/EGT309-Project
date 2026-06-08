@@ -1,31 +1,22 @@
 """
 model_training.py
 -----------------
-Defines, trains, and cross-validates the three chosen models:
+Defines and trains the three required models:
+1. Random Forest
+2. Gradient Boosting
+3. Logistic Regression
 
-1. Random Forest Classifier
-   - Ensemble of decision trees; handles non-linear interactions and
-     high-cardinality feature spaces well.  Naturally provides feature
-     importances.  Robust to outliers and does not require feature
-     scaling, but we scale anyway for consistency with LR.
-
-2. Gradient Boosting Classifier (sklearn GBM)
-   - Sequential boosting typically outperforms RF on tabular data by
-     correcting residual errors.  Provides its own feature importances
-     and generally produces the best predictive accuracy on structured
-     data of this kind.
-
-3. Logistic Regression (multinomial)
-   - Simple, interpretable linear baseline.  Fast to train and
-     provides calibrated probability estimates.  Useful for
-     benchmarking and explaining coefficients.
-
-All three models are well-suited to multi-class classification.
+Accuracy improvement notes:
+- Random Forest no longer uses class_weight="balanced" because that reduced
+  overall accuracy on this imbalanced dataset.
+- Random Forest is allowed full-depth trees and uses sqrt feature sampling.
+- Gradient Boosting uses a moderate number of boosting rounds to balance
+  accuracy and runtime.
 """
 
 import os
-import numpy as np
 import joblib
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
@@ -34,43 +25,42 @@ from config import RF_PARAMS, GB_PARAMS, LR_PARAMS, CV_FOLDS, MODEL_DIR
 
 
 def build_models() -> dict:
-    """Instantiate all three classifiers with configured hyperparameters."""
+    """Instantiate only the three models required by the project brief."""
     return {
-        "RandomForest":       RandomForestClassifier(**RF_PARAMS),
-        "GradientBoosting":   GradientBoostingClassifier(**GB_PARAMS),
+        "RandomForest": RandomForestClassifier(**RF_PARAMS),
+        "GradientBoosting": GradientBoostingClassifier(**GB_PARAMS),
         "LogisticRegression": LogisticRegression(**LR_PARAMS),
     }
 
 
-def train_and_evaluate(
-    X_train, y_train, models: dict, cv_folds: int = CV_FOLDS
-) -> dict:
+def train_and_evaluate(X_train, y_train, models: dict, cv_folds: int = CV_FOLDS) -> dict:
     """
-    Train each model and compute cross-validated accuracy on the
-    training set.
+    Train each model and optionally compute cross-validated accuracy.
 
-    Parameters
-    ----------
-    X_train : array-like
-    y_train : array-like
-    models  : dict  {name: estimator}
-    cv_folds: int
-
-    Returns
-    -------
-    dict  {name: {'model': fitted_estimator, 'cv_scores': np.ndarray}}
+    If cv_folds is 0 or 1, cross-validation is skipped to keep the pipeline
+    quick. Final accuracy is still calculated later on the held-out test set.
     """
     results = {}
     for name, model in models.items():
         print(f"\n[Training] Fitting {name} …")
         model.fit(X_train, y_train)
 
-        cv_scores = cross_val_score(
-            model, X_train, y_train, cv=cv_folds, scoring="accuracy", n_jobs=-1
-        )
-        mean_cv = cv_scores.mean()
-        std_cv  = cv_scores.std()
-        print(f"[Training] {name} CV accuracy: {mean_cv:.4f} ± {std_cv:.4f}")
+        if cv_folds and cv_folds > 1:
+            cv_scores = cross_val_score(
+                model,
+                X_train,
+                y_train,
+                cv=cv_folds,
+                scoring="accuracy",
+                n_jobs=1,
+            )
+            mean_cv = cv_scores.mean()
+            std_cv = cv_scores.std()
+            print(f"[Training] {name} CV accuracy: {mean_cv:.4f} ± {std_cv:.4f}")
+        else:
+            cv_scores = np.array([])
+            print(f"[Training] {name} fitted. CV skipped; using held-out test evaluation.")
+
         results[name] = {"model": model, "cv_scores": cv_scores}
 
     return results
