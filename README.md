@@ -104,6 +104,18 @@ docker run --rm \
   -v $(pwd)/saved_model:/app/saved_model \
   elderguard-pipeline python src/pipeline.py --rf_n_estimators 300
 ```
+### Docker Development Environment (MACOS)
+
+```bash
+# Start interactive development container
+docker run -it --rm \
+  -v $(pwd):/app \
+  -w /app \
+  elderguard-pipeline bash
+
+# Inside container: run individual modules or the full pipeline
+python src/pipeline.py
+```
 
 ### Docker Development Environment(WINDOWS)
 
