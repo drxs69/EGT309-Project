@@ -118,19 +118,6 @@ docker run -it --rm -v "${PWD}:/app" -w /app elderguard-pipeline sh
 python src/pipeline.py
 ```
 
-### Docker Development Environment (MACOS)
-
-```bash
-# Start interactive development container
-docker run -it --rm \
-  -v $(pwd):/app \
-  -w /app \
-  elderguard-pipeline bash
-
-# Inside container: run individual modules or the full pipeline
-python src/pipeline.py
-
----
 
 ## CLI Arguments
 
