@@ -208,8 +208,3 @@ Random Forest achieves the best macro F1 on this dataset. Gradient Boosting is c
 
 Hyperparameters are configurable via `src/config.py` or CLI arguments. The current values (200 trees for Random Forest; 150 estimators, learning rate 0.1, depth 3 for Gradient Boosting) were selected as sensible defaults based on dataset size (10,000 rows, 30 processed features). Further tuning via `GridSearchCV` or `RandomizedSearchCV` can be enabled by modifying `model_training.py`.
 
----
-
-## GenAI Usage Declaration
-
-*Work in Progress!*
